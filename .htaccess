@@ -1,0 +1,39 @@
+# Security Headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Permissions-Policy "geolocation=(self), microphone=()"
+</IfModule>
+
+# Disable directory listing
+Options -Indexes
+
+# Protect sensitive directories
+<FilesMatch "\.(json|log|ini|py|sql|db)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Protect _db, _uploads, folder_db directories
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(_db|_uploads|folder_db)/ - [F,L]
+    
+    # Block direct access to API handlers
+    RewriteRule ^api/(auth_handler|json_sync)\.php$ - [F,L]
+</IfModule>
+
+# PHP security
+<IfModule mod_php.c>
+    php_flag expose_php Off
+    php_value session.cookie_httponly 1
+    php_value session.cookie_samesite "Strict"
+    php_value session.use_strict_mode 1
+</IfModule>
+
+# Cache control for assets
+<FilesMatch "\.(css|js|svg|png|jpg|webp)$">
+    Header set Cache-Control "public, max-age=604800"
+</FilesMatch>
